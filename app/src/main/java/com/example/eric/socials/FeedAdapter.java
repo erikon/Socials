@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -48,10 +49,7 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
         holder.email.setText("Creator: " + s.emailOfCreator);
         holder.numRSVP.setText("People Interested: " + Integer.toString(s.numRSVP));
 
-//        String url = "https://firebasestorage.googleapis.com/v0/b/mdb-socials-47b33.appspot.com/o/" + s.eventImage;
-//        Glide.with(context).load(url).into(holder.eventImage);
-
-        class DownloadFilesTaskSocial extends AsyncTask<String, Void, Bitmap> {
+        class DownloadFilesTaskSocial extends AsyncTask<String, Void, Bitmap> {             // Download and insert images into the feed views
             protected Bitmap doInBackground(String... strings) {
                 try {
                     return Glide.with(context).
@@ -92,7 +90,7 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
                 intent.putExtra("socialID", socialId);
                 intent.putExtra("name",s.eventName);
                 intent.putExtra("image", s.eventImage);
-                intent.putExtra("desc", s.description);
+                intent.putExtra("desc", s.description);                         // Since this is an adapter class, we can't use strings file
                 intent.putExtra("numRSVP", Integer.toString(s.numRSVP));
                 intent.putExtra("email", s.emailOfCreator);
                 intent.putExtra("usersInterested", s.usersInterested);
@@ -106,7 +104,7 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
         return data.size();
     }
 
-    class CustomViewHolder extends RecyclerView.ViewHolder {
+    class CustomViewHolder extends RecyclerView.ViewHolder {            // Custom View Holder Class for the feed of socials
         TextView eventName;
         TextView email;
         TextView numRSVP;

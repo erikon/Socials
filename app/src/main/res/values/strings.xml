@@ -1,4 +1,39 @@
 <resources>
     <string name="app_name">Socials</string>
     <string name="title_activity_detail">DetailActivity</string>
+    <string name="firebase_link">gs://mdb-socials-47b33.appspot.com</string>
+    <string name="eventName">eventName</string>
+    <string name="eventImage">eventImage</string>
+    <string name="emailOfCreator">emailOfCreator</string>
+    <string name="description">description</string>
+    <string name="numRSVP">numRSVP</string>
+    <string name="date">date</string>
+    <string name="usersInterested">usersInterested</string>
+
+    <string name="name">name</string>
+    <string name="email">email</string>
+    <string name="profilePicture">profilePicture</string>
+    <string name="socials">socials</string>
+
+    <string name="update_profile_button">Update Profile</string>
+    <string name="create_new_social_button">Create New Social</string>
+    <string name="logout_button">Logout</string>
+
+    <string name="socials_db_tree">/socials</string>
+    <string name="users_db_tree">/user</string>
+
+    <string name="login_failed">Authentication failed.</string>
+    <string name="login_successful">Login Successful.</string>
+    <string name="signup_successful">Sign-up Successful.</string>
+
+    <string name="update_successful">Update Successful</string>
+
+    <string name="marked_interested">You have been marked as interested in this event!</string>
+    <string name="unmarked_interested">You have been taken off the interested list</string>
+
+    <string name="login_progressbar">Logging In...</string>
+    <string name="signup_progressbar">Sign-ing Up...</string>
+    <string name="updateprofile_progressbar">Updating Profile...</string>
+    <string name="create_social_progressbar">Creating Social...</string>
+
 </resources>

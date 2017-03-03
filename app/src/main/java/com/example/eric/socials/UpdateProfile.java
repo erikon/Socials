@@ -14,7 +14,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -29,9 +28,8 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 
-public class UpdateProfile extends AppCompatActivity {
+public class UpdateProfile extends AppCompatActivity implements View.OnClickListener{
 
     EditText nameView;
     ImageView profilePicture;
@@ -39,37 +37,19 @@ public class UpdateProfile extends AppCompatActivity {
     private Intent data;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference myRef = database.getReference("user");
+    DatabaseReference myRef = database.getReference("/user");
     private StorageReference mStorageRef;
 
     private static FirebaseAuth mAuth;
     private static FirebaseUser mUser;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_update_profile);
-
-        nameView = (EditText) findViewById(R.id.nameView);
-        profilePicture = (ImageView) findViewById(R.id.profilePicture);
-        saveButton = (Button) findViewById(R.id.saveButton);
-
-        profilePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+    public void onClick(View v){                    //Handles Button Clicks for profilePicture & the Save Button
+        switch (v.getId()) {
+            case R.id.profilePicture:
                 AlertDialog alertDialog = new AlertDialog.Builder(UpdateProfile.this).create();
                 alertDialog.setTitle("Set a Photo");
-//                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Take a Photo",
-//                        new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                //Open Camera
-//                                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//                                    startActivityForResult(takePictureIntent, 1);
-//                                }
-//                                dialog.dismiss();
-//                            }
-//                        });
+
                 alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Upload from Gallery",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -80,16 +60,10 @@ public class UpdateProfile extends AppCompatActivity {
                         });
 
                 alertDialog.show();
-            }
-        });
+                break;
 
-        mAuth = FirebaseAuth.getInstance();
-        mUser = mAuth.getCurrentUser();
-
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://mdb-socials-47b33.appspot.com");
+            case R.id.saveButton:
+                mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_link));
                 final String key = myRef.child("user").push().getKey();
                 StorageReference imageRef = mStorageRef.child(key + ".png");
 
@@ -103,20 +77,42 @@ public class UpdateProfile extends AppCompatActivity {
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         User u = new User(nameView.getText().toString(), key + ".png", mUser.getEmail());
                         myRef.child(mUser.getUid()).setValue(u);
-                        Toast.makeText(getApplicationContext(), "Update Successful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), getString(R.string.update_successful), Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
                         startActivity(intent);
                     }
                 });
-            }
-        });
+
+                Utils.progressBar(this, getString(R.string.updateprofile_progressbar));
+                break;
+
+            default:
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_update_profile);
+
+        nameView = (EditText) findViewById(R.id.nameView);
+        profilePicture = (ImageView) findViewById(R.id.profilePicture);
+        saveButton = (Button) findViewById(R.id.saveButton);
+
+        profilePicture.setOnClickListener(this); //Open upload image on picture click
+
+        mAuth = FirebaseAuth.getInstance();
+        mUser = mAuth.getCurrentUser();
+        //Instantiate Auth & User
+
+        saveButton.setOnClickListener(this);    // Save Information to a new User Object
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //Detects request codes
+        //Detects request codes for camera/uploading a picture
         if((requestCode == 3 || requestCode == 1) && resultCode == Activity.RESULT_OK) {
             Uri selectedImage = data.getData();
             Bitmap bitmap = null;
@@ -129,9 +125,7 @@ public class UpdateProfile extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        this.data = data;
-
-
+        this.data = data; // Pass Intent data to global variable data
     }
 }
 
