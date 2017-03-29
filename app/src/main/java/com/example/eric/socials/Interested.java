@@ -5,7 +5,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -37,15 +36,15 @@ public class Interested extends AppCompatActivity {
         DatabaseReference ref2 = database.getReference("/user");
 
         Intent grabData = getIntent();
-        final String socialImageId = grabData.getStringExtra("socialImageId");
+        final String socialImageId = grabData.getStringExtra(getString(R.string.email));
 
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {                // Get all the users who are in the arraylist of the specified social event
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot socialSnapShot: dataSnapshot.getChildren()) {
-                    if (socialSnapShot.child("emailOfCreator").getValue(String.class).equalsIgnoreCase(socialImageId)) {
+                    if (socialSnapShot.child(getString(R.string.emailOfCreator)).getValue(String.class).equalsIgnoreCase(socialImageId)) {
                         GenericTypeIndicator<ArrayList<String>> t = new GenericTypeIndicator<ArrayList<String>>() {};
-                        ArrayList<String> listOfUsersInSocial = socialSnapShot.child("usersInterested").getValue(t);
+                        ArrayList<String> listOfUsersInSocial = socialSnapShot.child(getString(R.string.usersInterested)).getValue(t);
                         for (String userId : listOfUsersInSocial) {
                             users.add(userId);
                         }
@@ -58,15 +57,15 @@ public class Interested extends AppCompatActivity {
 
             }
         });
-        ref2.addValueEventListener(new ValueEventListener() {
+        ref2.addValueEventListener(new ValueEventListener() {           // Create the users who are in the arraylist for the social and send their data to the adapter to be displayed
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot userSnapShot: dataSnapshot.getChildren()){
                     if(users.contains(userSnapShot.getKey())){
                         User u = new User(
-                                userSnapShot.child("name").getValue(String.class),
-                                userSnapShot.child("email").getValue(String.class),
-                                userSnapShot.child("profilePicture").getValue(String.class)
+                                userSnapShot.child(getString(R.string.name)).getValue(String.class),
+                                userSnapShot.child(getString(R.string.email)).getValue(String.class),
+                                userSnapShot.child(getString(R.string.profilePicture)).getValue(String.class)
                         );
                         interestedUsers.add(u);
                     }

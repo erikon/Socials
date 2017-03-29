@@ -1,5 +1,6 @@
 package com.example.eric.socials;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,21 +11,39 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+
     private Button loginButton;
     private Button signUpButton;
+
     private EditText emailView;
     private EditText passwordView;
+
+    @Override
+    public void onClick(View v){            // Handles Button clicks for login and signup
+        switch (v.getId()) {
+            case R.id.loginButton:
+                Utils.progressBar(this, getString(R.string.login_progressbar));
+                attemptLogin();
+                break;
+
+            case R.id.signUpButton:
+                Intent intent = new Intent(getApplicationContext(), SignUpActivity.class);
+                startActivity(intent);
+                break;
+
+            default:
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
+        mAuthListener = new FirebaseAuth.AuthStateListener() {                          // Auth Listener to check if user is already signed in
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -48,24 +67,14 @@ public class LoginActivity extends AppCompatActivity {
         };
 
         loginButton = (Button) findViewById(R.id.loginButton);
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
+        loginButton.setOnClickListener(this);
 
         signUpButton = (Button) findViewById(R.id.signUpButton);
-        signUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), SignUpActivity.class);
-                startActivity(intent);
-            }
-        });
+        signUpButton.setOnClickListener(this);
+
     }
 
-    private void attemptLogin(){
+    private void attemptLogin(){                                // Helper function for logging in a user
         emailView = (EditText) findViewById(R.id.emailView);
         final String email = emailView.getText().toString();
 
@@ -79,9 +88,9 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d("Sign In", "signInWithEmail:onComplete:" + task.isSuccessful());
                             if (!task.isSuccessful()) {
                                 Log.w("Sign In", "signInWithEmail", task.getException());
-                                Toast.makeText(getApplicationContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), getString(R.string.login_failed), Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(getApplicationContext(), "Login Successful.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), getString(R.string.login_successful), Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
                                 startActivity(intent);
                             }

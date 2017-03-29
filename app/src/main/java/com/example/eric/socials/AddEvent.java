@@ -20,7 +20,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -30,10 +29,8 @@ import com.google.firebase.auth.FirebaseUser;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-public class AddEvent extends AppCompatActivity {
+public class AddEvent extends AppCompatActivity implements View.OnClickListener{
 
     EditText eventName;
     EditText date;
@@ -50,6 +47,37 @@ public class AddEvent extends AppCompatActivity {
     private static FirebaseAuth mAuth;
     private static FirebaseUser mUser;
 
+    @Override
+    public void onClick(View v){
+        switch (v.getId()) {
+            case R.id.createEventButton:
+                mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_link));
+                final String key = myRef.child("socials").push().getKey();
+                StorageReference imageRef = mStorageRef.child(key + ".png");
+
+                imageRef.putFile(data.getData()).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(getApplicationContext(), "need an image!", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        ArrayList<String> users = new ArrayList<String>();
+                        users.add(mUser.getUid());
+                        Social s = new Social(eventName.getText().toString(), key + ".png", mUser.getEmail() , description.getText().toString(),
+                                1, date.getText().toString(), users);
+                        myRef.child(key).setValue(s);
+                        Toast.makeText(getApplicationContext(), "Post Successful!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
+                        startActivity(intent);
+                    }
+                });
+                Utils.progressBar(this, getString(R.string.create_social_progressbar));
+                break;
+            default:
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,35 +109,7 @@ public class AddEvent extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
 
-        createSocial.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://mdb-socials-47b33.appspot.com");
-                final String key = myRef.child("socials").push().getKey();
-                StorageReference imageRef = mStorageRef.child(key + ".png");
-
-                imageRef.putFile(data.getData()).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Toast.makeText(getApplicationContext(), "need an image!", Toast.LENGTH_SHORT).show();
-                    }
-                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        ArrayList<String> users = new ArrayList<String>();
-                        users.add(mUser.getUid());
-                        Social s = new Social(eventName.getText().toString(), key + ".png", mUser.getEmail() , description.getText().toString(),
-                                1, date.getText().toString(), users);
-//                        s.usersInterested.add(mUser.getUid());
-                        myRef.child(key).setValue(s);
-                        Toast.makeText(getApplicationContext(), "Post Successful!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
-                        startActivity(intent);
-                    }
-                });
-
-            }
-        });
+        createSocial.setOnClickListener(this);
     }
 
     @Override

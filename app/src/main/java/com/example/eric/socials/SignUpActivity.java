@@ -16,13 +16,24 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class SignUpActivity extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private Button signUpButton2;
     private EditText emailView2;
     private EditText passwordView2;
+
+    @Override
+    public void onClick(View v){            // Handles Button clicks for signing up
+        switch (v.getId()) {
+            case R.id.signUpButton2:
+                attemptSignUp();
+                Utils.progressBar(this, getString(R.string.signup_progressbar));
+                break;
+            default:
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,15 +54,10 @@ public class SignUpActivity extends AppCompatActivity {
         };
 
         signUpButton2 = (Button) findViewById(R.id.signUpButton2);
-        signUpButton2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptSignUp();
-            }
-        });
+        signUpButton2.setOnClickListener(this);
     }
 
-    private void attemptSignUp(){
+    private void attemptSignUp(){                                   // Helper Function for signing a user up
         emailView2 = (EditText) findViewById(R.id.emailView2);
         final String email = emailView2.getText().toString();
 
@@ -66,11 +72,11 @@ public class SignUpActivity extends AppCompatActivity {
                             Log.d("Sign Up", "createUserWithEmail:onComplete:" + task.isSuccessful());
 
                             if (!task.isSuccessful()) {
-                                Toast.makeText(getApplicationContext(), "Authentication failed.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), getString(R.string.login_failed), Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(getApplicationContext(), "Sign-up Successful.", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(SignUpActivity.this, FeedActivity.class);
-                                intent.putExtra("email", email);
+                                Toast.makeText(getApplicationContext(), getString(R.string.signup_successful), Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(SignUpActivity.this, UpdateProfile.class);
+                                intent.putExtra(getString(R.string.email), email);
                                 startActivity(intent);
                             }
 

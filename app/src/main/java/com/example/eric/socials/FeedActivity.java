@@ -1,27 +1,17 @@
 package com.example.eric.socials;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.util.SparseBooleanArray;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Spinner;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -30,13 +20,12 @@ import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class FeedActivity extends AppCompatActivity {
 
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
-    private String[]optionsArray = {"Update Profile","Create New Social" ,"Logout"};
+    private String[]optionsArray = {"Update Profile", "Create New Social", "Logout"};
     RecyclerView recyclerView;
     FeedAdapter feedAdapter;
     private ArrayList<Social> mSocials = new ArrayList<>();
@@ -53,7 +42,7 @@ public class FeedActivity extends AppCompatActivity {
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, optionsArray);
         mDrawerList.setAdapter(mAdapter);
 
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {                  // Listener for clicking an Item on the Side Drawer
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 SparseBooleanArray clickedItemPositions = mDrawerList.getCheckedItemPositions();
@@ -66,16 +55,16 @@ public class FeedActivity extends AppCompatActivity {
                         int key = clickedItemPositions.keyAt(j);
                         String item = (String) mDrawerList.getItemAtPosition(key);
 
-                        if(item.equalsIgnoreCase("update profile")){
+                        if(item.equalsIgnoreCase(getString(R.string.update_profile_button))){
                             Intent intent = new Intent(getApplicationContext(), UpdateProfile.class);
                             startActivity(intent);
                         }
-                        if(item.equalsIgnoreCase("logout")){
+                        if(item.equalsIgnoreCase(getString(R.string.logout_button))){
                             FirebaseAuth.getInstance().signOut();
                             Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                             startActivity(intent);
                         }
-                        if(item.equalsIgnoreCase("create new social")){
+                        if(item.equalsIgnoreCase(getString(R.string.create_new_social_button))){
                             Intent intent = new Intent(getApplicationContext(), AddEvent.class);
                             startActivity(intent);
                         }
@@ -84,21 +73,20 @@ public class FeedActivity extends AppCompatActivity {
             }
         });
 
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("/socials");
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(getString(R.string.socials_db_tree));         // DB Reference to the socials tree
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i("PLEASE 1", Long.toString(dataSnapshot.getChildrenCount()));
                 mSocials.clear();
                 for (DataSnapshot socialSnapShot: dataSnapshot.getChildren()) {
                     GenericTypeIndicator<ArrayList<String>> t = new GenericTypeIndicator<ArrayList<String>>() {};
-                    Social social = new Social(socialSnapShot.child("eventName").getValue(String.class),
-                            socialSnapShot.child("eventImage").getValue(String.class),
-                            socialSnapShot.child("emailOfCreator").getValue(String.class),
-                            socialSnapShot.child("description").getValue(String.class),
-                            socialSnapShot.child("numRSVP").getValue(Integer.class),
-                            socialSnapShot.child("date").getValue(String.class),
-                            socialSnapShot.child("usersInterested").getValue(t)
+                    Social social = new Social(socialSnapShot.child(getString(R.string.eventName)).getValue(String.class),
+                            socialSnapShot.child(getString(R.string.eventImage)).getValue(String.class),
+                            socialSnapShot.child(getString(R.string.emailOfCreator)).getValue(String.class),                                // Adding socials to an arraylist so the adapter can use the data
+                            socialSnapShot.child(getString(R.string.description)).getValue(String.class),
+                            socialSnapShot.child(getString(R.string.numRSVP)).getValue(Integer.class),
+                            socialSnapShot.child(getString(R.string.date)).getValue(String.class),
+                            socialSnapShot.child(getString(R.string.usersInterested)).getValue(t)
                     );
                     mSocials.add(social);
                 }
@@ -106,14 +94,13 @@ public class FeedActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
 
         feedAdapter = new FeedAdapter(this, mSocials);
-        recyclerView.setAdapter(feedAdapter);
+        recyclerView.setAdapter(feedAdapter);                   // Set adapter with arraylist of values
         feedAdapter.notifyDataSetChanged();
+
     }
 
     @Override
