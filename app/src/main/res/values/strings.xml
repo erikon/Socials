@@ -36,4 +36,9 @@
     <string name="updateprofile_progressbar">Updating Profile...</string>
     <string name="create_social_progressbar">Creating Social...</string>
 
+    <string name="firebase_storage_error">Error: Image Failed to load</string>
+    <string name="firebase_database_error">Error: Failed to push to database</string>
+
+    <string name="no_one_interested">There is no one interested in this event</string>
+
 </resources>

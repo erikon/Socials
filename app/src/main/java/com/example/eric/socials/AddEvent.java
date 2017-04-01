@@ -32,6 +32,8 @@ import java.util.ArrayList;
 
 public class AddEvent extends AppCompatActivity implements View.OnClickListener{
 
+    private static int UPLOAD_FROM_GALLERY_RETURN_CODE = 3;
+
     EditText eventName;
     EditText date;
     EditText description;
@@ -47,37 +49,6 @@ public class AddEvent extends AppCompatActivity implements View.OnClickListener{
     private static FirebaseAuth mAuth;
     private static FirebaseUser mUser;
 
-    @Override
-    public void onClick(View v){
-        switch (v.getId()) {
-            case R.id.createEventButton:
-                mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_link));
-                final String key = myRef.child("socials").push().getKey();
-                StorageReference imageRef = mStorageRef.child(key + ".png");
-
-                imageRef.putFile(data.getData()).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Toast.makeText(getApplicationContext(), "need an image!", Toast.LENGTH_SHORT).show();
-                    }
-                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        ArrayList<String> users = new ArrayList<String>();
-                        users.add(mUser.getUid());
-                        Social s = new Social(eventName.getText().toString(), key + ".png", mUser.getEmail() , description.getText().toString(),
-                                1, date.getText().toString(), users);
-                        myRef.child(key).setValue(s);
-                        Toast.makeText(getApplicationContext(), "Post Successful!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
-                        startActivity(intent);
-                    }
-                });
-                Utils.progressBar(this, getString(R.string.create_social_progressbar));
-                break;
-            default:
-        }
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,7 +69,7 @@ public class AddEvent extends AppCompatActivity implements View.OnClickListener{
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 //launch gallery
-                                startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), 3);
+                                startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), UPLOAD_FROM_GALLERY_RETURN_CODE);
                                 dialog.dismiss();
                             }
                         });
@@ -112,11 +83,47 @@ public class AddEvent extends AppCompatActivity implements View.OnClickListener{
         createSocial.setOnClickListener(this);
     }
 
+    private void createEvent(){
+        mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_link));
+        final String key = myRef.child("socials").push().getKey();
+        StorageReference imageRef = mStorageRef.child(key + ".png");
+
+        imageRef.putFile(data.getData()).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(getApplicationContext(), "need an image!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                ArrayList<String> users = new ArrayList<String>();
+                users.add(mUser.getUid());
+                Social s = new Social(eventName.getText().toString(), key + ".png", mUser.getEmail() , description.getText().toString(),
+                        1, date.getText().toString(), users);
+                myRef.child(key).setValue(s);
+                Toast.makeText(getApplicationContext(), "Post Successful!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), FeedActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    @Override
+    public void onClick(View v){
+        switch (v.getId()) {
+            case R.id.createEventButton:
+                createEvent();
+                Utils.progressBar(this, getString(R.string.create_social_progressbar));
+                break;
+            default:
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //Detects request codes
-        if ((requestCode == 3 || requestCode == 1) && resultCode == Activity.RESULT_OK) {
+        if ((requestCode == UPLOAD_FROM_GALLERY_RETURN_CODE) && resultCode == Activity.RESULT_OK) {
             Uri selectedImage = data.getData();
             Bitmap bitmap = null;
             try {

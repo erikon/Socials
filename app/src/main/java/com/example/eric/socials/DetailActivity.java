@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -20,11 +21,16 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -50,57 +56,6 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
 
     boolean isInterested = false;
     int intNumRSVP;
-
-    @Override
-    public void onClick(View v){            // Handles Cases for clicking Interested & Num RSVP Buttons
-        switch (v.getId()) {
-            case R.id.numRSVPButton:
-                if(usersInterested == null || usersInterested.size() == 0){
-                    Toast.makeText(getApplicationContext(), "There is no one interested in this event", Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent intent = new Intent(getApplicationContext(), Interested.class);
-                    intent.putExtra(getString(R.string.email), emailAddress.getText().toString());              // On Click, go to new activity with recylcer view of users interested
-                    startActivity(intent);
-                }
-                break;
-
-            case R.id.interestedButton:
-                final String userUID = mUser.getUid();
-                final String socialId = grabIntent.getStringExtra("socialID");
-
-                if (!isInterested && (usersInterested == null || !usersInterested.contains(userUID))) {
-                    if(usersInterested == null) {
-                        ArrayList<String> tempUsers = new ArrayList<>();
-                        tempUsers.add(userUID);
-                        myRef.child(socialId).child(getString(R.string.usersInterested)).setValue(tempUsers);   // On click, increment num of users interested
-                    } else {                                                                                    // and add the user to the arraylist field
-                        usersInterested.add(userUID);
-                        myRef.child(socialId).child(getString(R.string.usersInterested)).setValue(usersInterested);
-                    }
-
-                    intNumRSVP += 1;
-                    myRef.child(socialId).child(getString(R.string.numRSVP)).setValue(intNumRSVP);
-                    numRSVPButton.setText(Integer.toString(intNumRSVP) + " People Interested!");
-
-                    Toast.makeText(getApplicationContext(), getString(R.string.marked_interested), Toast.LENGTH_SHORT).show();
-                    isInterested = true;
-
-                } else {
-                    usersInterested.remove(userUID);
-                    myRef.child(socialId).child(getString(R.string.usersInterested)).setValue(usersInterested);
-
-                    intNumRSVP -= 1;
-                    myRef.child(socialId).child(getString(R.string.numRSVP)).setValue(intNumRSVP);
-                    numRSVPButton.setText(Integer.toString(intNumRSVP) + " People Interested!");
-
-                    Toast.makeText(getApplicationContext(), getString(R.string.unmarked_interested), Toast.LENGTH_SHORT).show();
-                    isInterested = false;
-                }
-                break;
-
-            default:
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,7 +94,6 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
         mAuth = FirebaseAuth.getInstance();
         mUser = mAuth.getCurrentUser();
 
-
         interestedButton.setOnClickListener(this);
         numRSVPButton.setOnClickListener(this);             //Listeners for both buttons
 
@@ -165,7 +119,6 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
             }
         };
 
-
         FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_link)).child(imageUrl).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
@@ -174,8 +127,96 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-
+                Toast.makeText(getApplicationContext(), getString(R.string.firebase_storage_error), Toast.LENGTH_SHORT).show();
+                Log.d("Error", "Exception: " + exception);
             }
         });
+    }
+
+    private boolean runTransaction(final String socialID, final String userID){
+        myRef.child(socialID).runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                Social s = mutableData.getValue(Social.class);
+                if (s == null){
+                    return Transaction.success(mutableData);
+                }
+                Log.i("Object info", "Name: " + s.eventName);
+                if (s.usersInterested == null){
+                    ArrayList<String>tempUsers = new ArrayList<String>();
+                    tempUsers.add(userID);
+                    s.usersInterested = tempUsers;
+                    s.numRSVP += 1;
+                    intNumRSVP += 1;
+                    isInterested = true;
+                } else if (s.usersInterested.contains(userID)){
+                    s.numRSVP = s.numRSVP - 1;
+                    s.usersInterested.remove(userID);
+
+                    intNumRSVP -= 1;
+
+                    isInterested = false;
+                } else {
+                    s.numRSVP = s.numRSVP + 1;
+                    s.usersInterested.add(userID);
+
+                    intNumRSVP += 1;
+
+                    isInterested = true;
+                }
+
+                mutableData.setValue(s);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.d("On Transaction Finished", "Transaction Completed: " + databaseError);
+            }
+        });
+        if (isInterested) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onClick(View v){            // Handles Cases for clicking Interested & Num RSVP Buttons
+        switch (v.getId()) {
+            case R.id.numRSVPButton:
+                numRSVPButtonClicked();
+                break;
+
+            case R.id.interestedButton:
+                interestedButtonClicked();
+                break;
+
+            default:
+        }
+    }
+
+    private void interestedButtonClicked() {
+        final String userUID = mUser.getUid();
+        final String socialId = grabIntent.getStringExtra("socialID");
+
+        boolean interest = runTransaction(socialId, userUID);
+        if (interest){
+            Toast.makeText(getApplicationContext(), getString(R.string.marked_interested), Toast.LENGTH_SHORT).show();
+            numRSVPButton.setText(Integer.toString(intNumRSVP) + " People Interested!");
+        } else {
+            Toast.makeText(getApplicationContext(), getString(R.string.unmarked_interested), Toast.LENGTH_SHORT).show();
+            numRSVPButton.setText(Integer.toString(intNumRSVP) + " People Interested!");
+        }
+    }
+
+    private void numRSVPButtonClicked() {
+        if(usersInterested == null || usersInterested.size() == 0){
+            Toast.makeText(getApplicationContext(), getString(R.string.no_one_interested), Toast.LENGTH_SHORT).show();
+        } else {
+            Intent intent = new Intent(getApplicationContext(), Interested.class);
+            intent.putExtra(getString(R.string.email), emailAddress.getText().toString());              // On Click, go to new activity with recylcer view of users interested
+            startActivity(intent);
+        }
     }
 }

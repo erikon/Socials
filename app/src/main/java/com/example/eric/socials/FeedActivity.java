@@ -5,11 +5,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -26,8 +28,8 @@ public class FeedActivity extends AppCompatActivity {
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
     private String[]optionsArray = {"Update Profile", "Create New Social", "Logout"};
-    RecyclerView recyclerView;
-    FeedAdapter feedAdapter;
+    private RecyclerView recyclerView;
+    private FeedAdapter feedAdapter;
     private ArrayList<Social> mSocials = new ArrayList<>();
 
     @Override
@@ -79,22 +81,18 @@ public class FeedActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mSocials.clear();
                 for (DataSnapshot socialSnapShot: dataSnapshot.getChildren()) {
-                    GenericTypeIndicator<ArrayList<String>> t = new GenericTypeIndicator<ArrayList<String>>() {};
-                    Social social = new Social(socialSnapShot.child(getString(R.string.eventName)).getValue(String.class),
-                            socialSnapShot.child(getString(R.string.eventImage)).getValue(String.class),
-                            socialSnapShot.child(getString(R.string.emailOfCreator)).getValue(String.class),                                // Adding socials to an arraylist so the adapter can use the data
-                            socialSnapShot.child(getString(R.string.description)).getValue(String.class),
-                            socialSnapShot.child(getString(R.string.numRSVP)).getValue(Integer.class),
-                            socialSnapShot.child(getString(R.string.date)).getValue(String.class),
-                            socialSnapShot.child(getString(R.string.usersInterested)).getValue(t)
-                    );
+                    Social social = socialSnapShot.getValue(Social.class);
                     mSocials.add(social);
                 }
                 feedAdapter.notifyDataSetChanged();
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getApplicationContext(), getString(R.string.firebase_database_error), Toast.LENGTH_SHORT).show();
+                Log.d("Error", "Error: " + databaseError);
+
+            }
         });
 
         feedAdapter = new FeedAdapter(this, mSocials);
@@ -108,11 +106,4 @@ public class FeedActivity extends AppCompatActivity {
         super.onResume();
         feedAdapter.notifyDataSetChanged();
     }
-
-    @Override
-    public void onStart(){
-        super.onStart();
-        feedAdapter.notifyDataSetChanged();
-    }
-
 }

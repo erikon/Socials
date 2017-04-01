@@ -63,8 +63,6 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
                 }
             }
 
-            protected void onProgressUpdate(Void... progress) {}
-
             protected void onPostExecute(Bitmap result) {
                 holder.eventImage.setImageBitmap(result);
             }
@@ -78,7 +76,7 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-
+                Log.d("Error", "Exception: " + exception);
             }
         });
 
@@ -88,7 +86,7 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
                 Intent intent = new Intent(context, DetailActivity.class);
                 String socialId = s.eventImage.substring(0, s.eventImage.length() - 4);
                 intent.putExtra("socialID", socialId);
-                intent.putExtra("name",s.eventName);
+                intent.putExtra("name", s.eventName);
                 intent.putExtra("image", s.eventImage);
                 intent.putExtra("desc", s.description);                         // Since this is an adapter class, we can't use strings file
                 intent.putExtra("numRSVP", Integer.toString(s.numRSVP));
