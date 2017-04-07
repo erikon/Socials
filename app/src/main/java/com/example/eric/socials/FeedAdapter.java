@@ -45,8 +45,8 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
     @Override
     public void onBindViewHolder(final CustomViewHolder holder, int position) {
         final Social s = data.get(data.size()-position-1);
-        holder.eventName.setText("Title: " + s.eventName);
-        holder.email.setText("Creator: " + s.emailOfCreator);
+        holder.eventName.setText(s.eventName);
+        holder.email.setText(s.emailOfCreator);
         holder.numRSVP.setText("People Interested: " + Integer.toString(s.numRSVP));
 
         class DownloadFilesTaskSocial extends AsyncTask<String, Void, Bitmap> {             // Download and insert images into the feed views
@@ -64,7 +64,8 @@ public class FeedAdapter  extends RecyclerView.Adapter<FeedAdapter.CustomViewHol
             }
 
             protected void onPostExecute(Bitmap result) {
-                holder.eventImage.setImageBitmap(result);
+                Bitmap roundedImage = Utils.getRoundedCornerBitmap(result, 60);
+                holder.eventImage.setImageBitmap(roundedImage);
             }
         }
         FirebaseStorage.getInstance().getReferenceFromUrl("gs://mdb-socials-47b33.appspot.com").child(s.eventImage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {

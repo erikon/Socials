@@ -102,7 +102,7 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
             protected Bitmap doInBackground(String... params) {
                 Display display = getWindowManager().getDefaultDisplay();
                 int width = display.getWidth();                                                 // Download the image in the background and place it into the imageView
-                int height = display.getHeight();
+                int height = display.getHeight();                                               // Can't get dimensions of original image
                 Bitmap bit = null;
                 try {
                     bit = BitmapFactory.decodeStream((InputStream) new URL(params[0].toString()).getContent());
