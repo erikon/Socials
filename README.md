@@ -14,5 +14,10 @@ The core concepts used in this application include the following:
   - Drawer Views
   - Async Tasks
   
-Screenshots coming Soon
+ **Note:** Still working on implementing designs. 
+  
+![screenshot_20170406-182511](https://cloud.githubusercontent.com/assets/5530931/24781938/e33740e0-1af7-11e7-9e60-b81df76f1467.png)
+
+![screenshot_20170406-182522](https://cloud.githubusercontent.com/assets/5530931/24781939/e4975894-1af7-11e7-8d89-a0bad9f07e84.png)
+
 
